@@ -49,7 +49,7 @@ bridge.reg.tri(y, X, nsamp, alpha=0.5,
            sig2.shape=0.0, sig2.scale=0.0, nu.shape=2.0, nu.rate=2.0,
            alpha.a=1.0, alpha.b=1.0,	   
            sig2.true=0.0, tau.true=0.0,
-           burn=500, ortho=FALSE, betaburn=0)
+           burn=500, ortho=FALSE, betaburn=0, extras=FALSE)
 
 bridge.reg.stb(y, X, nsamp, alpha=0.5,
            sig2.shape=0.0, sig2.scale=0.0, nu.shape=2.0, nu.rate=2.0,
@@ -75,6 +75,7 @@ bridge.reg.stb(y, X, nsamp, alpha=0.5,
   \item{method}{The method to use.  Either "triangle" or "stable".}
   \item{ortho}{When the design matrix is orthogonal set to TRUE.}
   \item{betaburn}{Number of burn iterations when sampling beta.}
+  \item{extras}{Only used for package testing.}
 }
 
 \examples{

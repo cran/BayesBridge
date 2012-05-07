@@ -108,3 +108,7 @@ void rpotrf(char uplo, int n, float* a, int lda, int& info)
 { spotrf_(&uplo, &n, a, &lda, &info); }
 
 #endif
+
+// Fancy
+// UnaryOp<float> Sqrt(&std::sqrt);
+// UnaryOp<float> Sqrt(&id_function);

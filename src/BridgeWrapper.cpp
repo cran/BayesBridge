@@ -33,6 +33,13 @@
 #include "Rmath.h"
 #include <R_ext/Utils.h>
 #include <R_ext/PrtUtil.h>
+#define MYFINITE(x) (R_finite(x))
+#else 
+#define MYFINITE(x) (isfinite(x))
+#endif
+
+#ifndef SAMPCHECK
+#define SAMPCHECK 1
 #endif
 
 // #include <algorithm>
@@ -724,8 +731,113 @@ void bridge_reg_stable(double *betap,
 
 } // bridge_regression
 
+
 ////////////////////////////////////////////////////////////////////////////////
-			     // TRUNCATED NORMAL //
+// To experiment with the values R returns.
+
+void mytest(int *out, double *x) {
+
+  out[0] = 0;
+
+  #ifdef USE_R
+  if (ISNAN(x[0]))
+    out[0] = 1;
+  if (x[0] == R_PosInf)
+    out[0] = 2;
+  if (x[0] == R_NegInf)
+    out[0] = 3;
+  if (ISNA(x[0])) // Need to force double.
+    out[0] = 4;
+
+  if (x[0] == 0.0) 
+    x[0] = NA_REAL;
+  #endif
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+			  // TRUNCATED Exponential //
+////////////////////////////////////////////////////////////////////////////////
+
+void rtexpon_rate_left(double *x, double *left, double *rate, int *num)
+{
+  RNG r;
+
+  #ifdef USE_R
+  GetRNGstate();
+  #endif
+
+  for(int i=0; i < *num; ++i){
+    #ifdef USE_R
+    if (i%SAMPCHECK==0) R_CheckUserInterrupt();
+    #endif
+
+    x[i] = r.texpon_rate(left[i], rate[i]);
+  }
+
+  #ifdef USE_R
+  PutRNGstate();
+  #endif
+}
+
+void rtexpon_rate_both(double *x, double *left, double *right, double *rate, int *num)
+{
+  RNG r;
+
+  #ifdef USE_R
+  GetRNGstate();
+  #endif
+
+  for(int i=0; i < *num; ++i){
+    #ifdef USE_R
+    if (i%SAMPCHECK==0) R_CheckUserInterrupt();
+    #endif
+
+    x[i] = r.texpon_rate(left[i], right[i], rate[i]);
+  }
+
+  #ifdef USE_R
+  PutRNGstate();
+  #endif
+}
+
+// TODO: NEED TO DEAL WITH Inf/NA/NaN
+void rtexpon_rate(double *x, double *left, double *right, double *rate, int *num)
+{
+  RNG r;
+
+  #ifdef USE_R
+  GetRNGstate();
+  #endif
+
+  for(int i=0; i < *num; ++i){
+    #ifdef USE_R
+    if (i%SAMPCHECK==0) R_CheckUserInterrupt();
+
+    if (ISNAN(left[i]) || ISNAN(right[i]) || ISNAN(rate[i]) || !R_FINITE(left[i]) ||
+	ISNA(left[i])  || ISNA(right[i])  || ISNA(rate[i]) ) 
+      {
+	x[i] = R_NaN; 
+	Rprintf( "rtexpon_rate: caught non finite left value: %g; x[i] = %g.\n", left[i], x[i]);
+      }
+
+    #endif
+
+    // TODO: Really, I need to check if it is +/- Inf.
+    if (MYFINITE(right[i]))
+      x[i] = r.texpon_rate(left[i], right[i], rate[i]);
+    else 
+      x[i] = r.texpon_rate(left[i], rate[i]);
+
+  }
+
+  #ifdef USE_R
+  PutRNGstate();
+  #endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+			  // TRUNCATED Exponential //
 ////////////////////////////////////////////////////////////////////////////////
 
 void rtnorm_left(double *x, double *left, double *mu, double *sig, int *num)
@@ -738,7 +850,7 @@ void rtnorm_left(double *x, double *left, double *mu, double *sig, int *num)
 
   for(int i=0; i < *num; ++i){
     #ifdef USE_R
-    if (i%1==0) R_CheckUserInterrupt();
+    if (i%SAMPCHECK==0) R_CheckUserInterrupt();
     #endif
 
     x[i] = r.tnorm(left[i], mu[i], sig[i]);
@@ -759,7 +871,7 @@ void rtnorm_both(double *x, double *left, double* right, double *mu, double *sig
 
   for(int i=0; i < *num; ++i){
     #ifdef USE_R
-    if (i%1==0) R_CheckUserInterrupt();
+    if (i%SAMPCHECK==0) R_CheckUserInterrupt();
     #endif
 
     x[i] = r.tnorm(left[i], right[i], mu[i], sig[i]);
@@ -770,6 +882,65 @@ void rtnorm_both(double *x, double *left, double* right, double *mu, double *sig
   #endif
 }
 
+void rtnorm(double *x, double *left, double* right, double *mu, double *sig, int *num)
+{
+  // TODO: NEED TO DEAL WITH Inf/NA/NaN
+
+  RNG r;
+  
+  #ifdef USE_R
+  GetRNGstate();
+  #endif
+  
+  for(int i=0; i < *num; ++i){
+    #ifdef USE_R
+    if (i%SAMPCHECK==0) R_CheckUserInterrupt(); 
+
+    if (ISNAN(left[i]) || ISNAN(right[i]) || ISNAN(mu[i]) || ISNAN(sig[i]))
+      x[i] = R_NaN;
+
+    if (ISNA(left[i]) || ISNA(right[i]) || ISNA(mu[i]) || ISNA(sig[i]))
+      x[i] = NA_REAL;
+    
+    #endif
+    
+    #ifdef USE_R
+
+    if (left[i] != R_NegInf && right[i] != R_PosInf) {
+      x[i] = r.tnorm(left[i], right[i], mu[i], sig[i]);
+    } else if (left[i] != R_NegInf && right[i] == R_PosInf) {
+      x[i] = x[i] = r.tnorm(left[i], mu[i], sig[i]);
+    } else if (left[i] == R_NegInf && right[i] != R_PosInf) {
+      x[i] = -1.0 * r.tnorm(-1.0 * right[i], -1.0 * mu[i], sig[i]);
+    } else if (left[i] == R_NegInf && right[i] == R_PosInf) {
+      x[i] = r.norm(mu[i], sig[i]);
+    } else {
+      x[i] = R_NaN;
+    }
+
+    #else
+
+    // TODO: Need to adjust so that we deal with +/- inf.
+
+    if (MYFINITE(left[i]) && MYFINITE(right[i]))
+      x[i] = r.tnorm(left[i], right[i], mu[i], sig[i]);
+    else if (MYFINITE(left[i]))
+      x[i] = r.tnorm(left[i], mu[i], sig[i]);
+    else if (MYFINITE(right[i]))
+      x[i] = -1.0 * r.tnorm(-1.0 * right[i], -1.0 * mu[i], sig[i]);
+    else 
+      x[i] = r.norm(mu[i], sig[i]);
+
+    #endif
+	
+  }
+  
+  #ifdef USE_R
+  PutRNGstate();
+  #endif
+}
+
+//------------------------------------------------------------------------------
 void rrtgamma_rate(double *x, double *scale, double *rate, double *right_t, int *num)
 {
   RNG r;
@@ -780,7 +951,7 @@ void rrtgamma_rate(double *x, double *scale, double *rate, double *right_t, int 
 
   for(int i=0; i < *num; ++i){
     #ifdef USE_R
-    if (i%1==0) R_CheckUserInterrupt();
+    if (i%SAMPCHECK==0) R_CheckUserInterrupt();
     #endif
 
     x[i] = r.rtgamma_rate(scale[i], rate[i], right_t[i]);
@@ -801,7 +972,7 @@ void retstable_LD(double* x, double* alpha, double* V0, double* h, int* num)
 
   for(int i=0; i < *num; ++i){
     #ifdef USE_R
-    if (i%10000==0) R_CheckUserInterrupt();
+    if (i%SAMPCHECK==0) R_CheckUserInterrupt();
     #endif
 
     x[i] = retstable_LD(h[i], alpha[i], r, V0[i]);

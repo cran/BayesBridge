@@ -144,6 +144,7 @@ class Frame
   inline uint area() const { return nr * nc; }
   inline uint vol()  const { return nr * nc * nm; }
   inline uint size() const { return nr * nc * nm; }
+  inline uint mem()  const { return sizeof(SCLR) * size(); }
 
   // Matrix Access
 
@@ -401,19 +402,23 @@ extern "C" {
                        // Utility Functions //
 //////////////////////////////////////////////////////////////////////
 
+// void copy(Frame<SCLR>& dest, Frame<SCLR>& source
+
 template<typename SCLR>
 void Frame<SCLR>::copy(const Frame<SCLR>& M)
 {
   if (sameframe(M)) return;
   // if (p==&M(0)) return;
   if (overlap(*this, M)) {
-    #ifdef NTHROW
-    throw std::runtime_error("Frame<SCLR>::copy memory overlap.\n");
+    #ifndef NTHROW
+    throw std::runtime_error("Frame<SCLR>::copy(const Frame<SCLR>&) memory overlap.\n");
     #else
-    Rprintf( "Warning::Frame<SCLR>::copy memory overlaps.\n");
+    Rprintf( "Warning::Frame<SCLR>::copy(const Frame<SCLR>& memory overlaps.\n");
     #endif
+    // I should return 0/1 for success/failure.
   }
-  idxcheck(nr==M.rows() && nc==M.cols() && nm==M.mats());
+  // Taken care of by sameframe.
+  // idxcheck(nr==M.rows() && nc==M.cols() && nm==M.mats());
   for(uint i = 0; i < vol(); i++) p[i] = M.vec(i);
 } // copy
 
@@ -1091,6 +1096,70 @@ int chol(Frame<SCLR> a, char uplo)
 }
 
 //------------------------------------------------------------------//
+
+//////////////////////////////////////////////////////////////////////
+		       // TRYING TO BE FANCY //
+//////////////////////////////////////////////////////////////////////
+
+// template<typename SCLR>
+// SCLR (id_function)(const SCLR& a) { return a; }
+
+// template<typename SCLR>
+// SCLR (sqrt_function)(const SCLR& a) {return sqrt(a);}
+
+// template<typename SCLR> class UnaryOp
+// {
+// public:
+//   typedef SCLR (*unary)(const SCLR& a);
+//   // virtual SCLR call(SCLR a) {return a;}
+//   unary call;
+//   // SCLR (*call)(SCLR);
+//   UnaryOp() { call=&id_function; }
+//   UnaryOp(unary a) {call=a;}
+// }; 
+
+// template<typename SCLR>
+// SCLR (Sqrt)(SCLR a)
+// {
+//   return a;
+// }
+
+// template<typename SCLR> class BinaryOp
+// {
+//   virtual SCLR call(SCLR, SCLR) = 0;
+//   // SCLR (*call)(SCLR, SCLR) = 0;
+// };
+
+// template<typename SCLR> class Id : UnaryOp<SCLR>
+// {
+//   SCLR call(SCLR a) {
+//     return a;
+//   }
+// };
+
+// template<typename SCLR> 
+// void apply(Frame<SCLR> dest, Frame<SCLR> source, UnaryOp<SCLR> uop);
+//{
+// 0,1,2 apply to all, apply to rows, apply to columns.
+  // Check dims.
+  // Check overlap.
+  // for loop - template apply<par>()?
+//}
+
+// template<typename SCLR> 
+// void sumAll(Frame<SCLR> dest, Frame<SCLR> source, UnaryOp<SCLR> uop, bool normalize);
+
+// template<typename SCLR> 
+// void sumRows(Frame<SCLR> dest, Frame<SCLR> source, UnaryOp<SCLR> uop, bool normalize);
+
+// template<typename SCLR> 
+// void sumCols(Frame<SCLR> dest, Frame<SCLR> source, UnaryOp<SCLR> uop, bool normalize);
+
+// template<typename SCLR> 
+// void sumMats(Frame<SCLR> dest, Frame<SCLR> source, UnaryOp<SCLR> uop, bool normalize);
+
+// template<typename SCLR> 
+// void sum(Frame<SCLR> dest, Frame<SCLR> source, UnaryOp<SCLR> uop, bool normalize);
 
 //////////////////////////////////////////////////////////////////////
                       // Hadamard Operations //

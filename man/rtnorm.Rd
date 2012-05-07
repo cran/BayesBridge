@@ -10,8 +10,7 @@
 
 \details{
 
-  This routine follows Robert (1995) to sample a truncated normal.  R calls a
-  wrapper function to C for fast posterior simulation.
+  This routine follows Robert (1995) to sample a truncated normal.  
 
   For mu, sig, left, and right you may send sequences of parameters in addition
   to scalars.

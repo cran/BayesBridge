@@ -177,6 +177,7 @@ void BR::rtnorm_gibbs(MF beta, MF bmean, MF Prec, double sig2, MF b, RNG& r)
   Matrix m; mult(m, RT, bmean);
   Matrix z; mult(z, RT, beta);
   double v = sig2; 
+  double sig = sqrt(sig2);
 
   Matrix ss("N", P-1);
 
@@ -205,7 +206,7 @@ void BR::rtnorm_gibbs(MF beta, MF bmean, MF Prec, double sig2, MF b, RNG& r)
     double rmin = minAll(right);
     
     try {
-      z(i) = r.tnorm(lmax, rmin, m(i), sqrt(v));
+      z(i) = r.tnorm(lmax, rmin, m(i), sig);
     }
     catch (std::exception& e) {
       Rprintf("left: %g, right: %g, z[i]: %g\n", lmax, rmin, z(i));

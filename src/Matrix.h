@@ -437,7 +437,7 @@ uint Block<SCLR>::read(istream& is, bool natural)
 {
   uint totalread = 0;
   uint numrows   = 0;
-  uint nummat    = 0;
+  // uint nummat    = 0;
 
   vector<SCLR> space(0);
 
@@ -476,7 +476,7 @@ uint Block<SCLR>::read(istream& is, bool natural)
 
   }
 
-  int numcols = totalread / numrows;
+  uint numcols = totalread / numrows;
   if (totalread % numrows != 0) {
     Rprintf( "Warning: Number of rows read does not evenly divide number of items read.\n");
     numcols++;

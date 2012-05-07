@@ -225,9 +225,19 @@ extern "C"
 			 double *runtime,
 			 const bool *ortho);
 
+  void mytest(int *out, double *x);
+
+  void rtexpon_rate_left(double *x, double *left, double *rate, int *num);
+
+  void rtexpon_rate_both(double *x, double *left, double *right, double *rate, int *num);
+
+  void rtexpon_rate(double *x, double *left, double *right, double *rate, int *num);
+
   void rtnorm_left(double *x, double *left, double *mu, double *sig, int *num);
 
   void rtnorm_both(double *x, double *left, double* right, double *mu, double *sig, int *num);
+
+  void rtnorm(double *x, double *left, double* right, double *mu, double *sig, int *num);
 
   void rrtgamma_rate(double *x, double *scale, double *rate, double *right_t, int *num);
 
