@@ -791,6 +791,27 @@ void rrtgamma_rate(double *x, double *scale, double *rate, double *right_t, int 
   #endif
 }
 
+void retstable_LD(double* x, double* alpha, double* V0, double* h, int* num)
+{
+  RNG r;
+
+  #ifdef USE_R
+  GetRNGstate();
+  #endif
+
+  for(int i=0; i < *num; ++i){
+    #ifdef USE_R
+    if (i%10000==0) R_CheckUserInterrupt();
+    #endif
+
+    x[i] = retstable_LD(h[i], alpha[i], r, V0[i]);
+  }
+
+  #ifdef USE_R
+  PutRNGstate();
+  #endif
+}
+
 //////////////////////////////////////////////////////////////////////
 // END OF CODE //
 //////////////////////////////////////////////////////////////////////

@@ -412,3 +412,31 @@ rrtgamma <- function(num=1, shape=1.0, rate=1.0, rtrunc=1.0, scale=1.0/rate)
 
   out[[1]]
 }
+
+retstable.ld <- function(num=1, alpha=1, V0=1, h=1)
+{
+  if (!all(V0>0)) {
+    print("V0 must be > 0.");
+    return(NA);
+  }
+
+  if (!all(h>=0)) {
+    print("h must be >= 0");
+    return(NA);
+  }
+
+  if (!all(alpha>0) || !all(alpha<=1)) {
+    print("alpha must be in (0,1].");
+    return(NA);
+  }
+
+  alpha = array(alpha, num);
+  h     = array(h    , num);
+  V0    = array(V0   , num);
+
+  x = rep(0, num)
+
+  out = .C("retstable_LD", x, alpha, V0, h, as.integer(num), PACKAGE="BayesBridge");
+
+  out[[1]]
+}

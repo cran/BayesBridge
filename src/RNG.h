@@ -64,7 +64,9 @@ class RNG : public BasicRNG {
   
   using BasicRNG::Gamma;
 
-  double Beta(double a, double b, bool log=false);
+  static double p_igauss(double x, double mu, double lambda);
+
+  static double Beta(double a, double b, bool log=false);
 
   // Truncated Normal
   double tnorm(double left);               // One sided standard.
@@ -79,6 +81,15 @@ class RNG : public BasicRNG {
   double right_tgamma_reject(double shape, double rate);
   double right_tgamma_beta(double shape, double rate);
   double rtgamma_rate(double shape, double rate, double right);
+
+  // Left truncated gamma.
+  double ltgamma(double shape, double rate, double trunc);
+
+  // Inverse Gaussian.
+  double igauss(double mu, double lambda);
+  
+  // Truncated Inv chi 2
+  double rtinvchi2(double scale, double trunc);
 
   // Random variates with Mat.  Fills the Mat with samples.
   template<typename Mat> void unif  (Mat& M);

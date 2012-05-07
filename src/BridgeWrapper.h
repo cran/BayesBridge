@@ -231,6 +231,8 @@ extern "C"
 
   void rrtgamma_rate(double *x, double *scale, double *rate, double *right_t, int *num);
 
+  void retstable_LD(double* x, double* alpha, double* V0, double* h, int* num);
+
 }
 
 #endif

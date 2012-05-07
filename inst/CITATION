@@ -2,7 +2,7 @@ citHeader("To cite package 'BayesBridge' in publications use:")
 
 citEntry(entry = "Manual",
 	 title = "Package 'BayesBridge'",
-	 author = personList(as.person("Nicolas G. Polson"),
+	 author = personList(as.person("Nicholas G. Polson"),
 	 	             as.person("James G. Scott"),
 			     as.person("Jesse Windle"  )),
          year = 2012,

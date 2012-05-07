@@ -56,6 +56,11 @@ using std::ostream;
 typedef unsigned int uint;
 #endif
 
+#ifndef CDX
+#define CDX(i,j,ld)  ((i)+(j)*(ld))
+// Column major indexing for sq matrix starting at 0 to array starting at 0.
+#endif
+
 //////////////////////////////////////////////////////////////////////
                           // MatrixFrame //
 //////////////////////////////////////////////////////////////////////
@@ -144,18 +149,18 @@ class Frame
 
   // Returns the (r,c) element of matrix.
   SCLR& operator()(uint r, uint c)
-    { 
+    {
     #ifndef NDEBUG
-        idxcheck(allow(r, c)); 
-    #endif      
-        return p[c * nr + r]; 
+        idxcheck(allow(r, c));
+    #endif
+        return p[c * nr + r];
     }
   const SCLR& operator()(uint r, uint c) const
-    { 
+    {
     #ifndef NDEBUG
-        idxcheck(allow(r, c)); 
+        idxcheck(allow(r, c));
     #endif
-        return p[c * nr + r]; 
+        return p[c * nr + r];
     }
 
   // Array of Matrix Access
@@ -163,38 +168,38 @@ class Frame
   // Returns the lth element of array of matrices.
   // I debate whether this is confusing notation.
   const SCLR& operator()(uint l) const
-    { 
+    {
     #ifndef NDEBUG
-        idxcheck(l < nr*nc*nm);    
-    #endif    
-        return p[l]; 
-    }
-    
-  SCLR& operator()(uint l)
-    { 
-    #ifndef NDEBUG
-        idxcheck(l < nr*nc*nm);   
+        idxcheck(l < nr*nc*nm);
     #endif
-        return p[l]; 
+        return p[l];
+    }
+
+  SCLR& operator()(uint l)
+    {
+    #ifndef NDEBUG
+        idxcheck(l < nr*nc*nm);
+    #endif
+        return p[l];
     }
 
   // Returns the (r,c) element of matrix[t].
   SCLR& operator()(uint r, uint c, uint t)
-    {   
-    #ifndef NDEBUG  
-        idxcheck(indexok(t) && allow(r,c)); 
-    #endif
-        return p[t * nr*nc + c * nr + r]; 
-    }
-    
-  const SCLR& operator()(uint r, uint c, uint t) const
-    { 
+    {
     #ifndef NDEBUG
-        idxcheck(indexok(t) && allow(r,c)); 
+        idxcheck(indexok(t) && allow(r,c));
     #endif
-        return p[t * nr*nc + c * nr + r]; 
-    }    
-    
+        return p[t * nr*nc + c * nr + r];
+    }
+
+  const SCLR& operator()(uint r, uint c, uint t) const
+    {
+    #ifndef NDEBUG
+        idxcheck(indexok(t) && allow(r,c));
+    #endif
+        return p[t * nr*nc + c * nr + r];
+    }
+
   SCLR& get(uint r, uint c=0, uint t=0)
   { idxcheck(indexok(t) && allow(r,c)); return p[t * nr*nc + c * nr + r]; }
   const SCLR& get(uint r, uint c=0, uint t=0) const
@@ -205,11 +210,6 @@ class Frame
   { idxcheck(i < nr*nc*nm); return p[i]; }
   const SCLR& vec(uint i) const
   { idxcheck(i < nr*nc*nm); return p[i]; }
-
-  // Returns a Frame pointing to the ith matrix or,
-  // if there is one matrix, to the ith column.
-  Frame<SCLR> operator[](uint i)
-  { idxcheck(indexok(i)); return Frame<SCLR>(&p[0+i*area()], nr, nc); }
 
   // Get the pointer.  Be wary.
   // const double* const getp()
@@ -225,18 +225,31 @@ class Frame
   // void thincopy(Frame& M);          // Copy pointer and dimensions.
   Frame<SCLR> fill(const SCLR& x);            // Fill with value.
   Frame<SCLR> col(uint c, uint num=1); // The c-th to c+num-1th col.
+  Frame<SCLR> column(uint c, uint num=1); // The c-th to c+num-1th col.
   Frame<SCLR> dim(uint r, uint c, uint m=1); // Return a MF with different, compatible dim.
+  void        reshape(uint r, uint c, uint m=1);
+
+  // Returns a Frame pointing to the ith matrix or,
+  // if there is one matrix, to the ith column.
+  Frame<SCLR> matrix(uint i)
+  { idxcheck(indexok(i)); return Frame<SCLR>(&p[0+i*area()], nr, nc); }
+  Frame<SCLR> operator[](uint i)
+  { return matrix(i); }
 
   // Read / Write.
 
-  bool write(      ostream&  os, bool header=0, bool binary=0);
-  uint  scan(      istream&  is, bool header=0, bool binary=0);
+  bool dump(      ostream&  os, bool header=0, bool binary=0); // Print out row on each line.
+  uint scan(      istream&  is, bool header=0, bool binary=0); // Read in row from each line.
+  void scanString(const string& s);                            // Read in by row from string.
 
   #ifndef DISABLE_FIO
-  bool write(const string& file, bool header=0, bool binary=0);
-  uint  scan(const string& file, bool header=0, bool binary=0);
+  bool dump(const string& file, bool header=0, bool binary=0);
+  bool save(const string& file, bool header=0, bool binary=0); // Save using dump.
+  uint scan(const string& file, bool header=0, bool binary=0); // Read in scan.
   #endif
   // bool  readstring(const string& s, bool header=0);
+
+  ostream& out(ostream &os, bool natural=true);
 
   // Matrix Functions.
 
@@ -273,7 +286,7 @@ typedef Frame<double> MatrixFrame;
 
 // y = alpha x + y.
 template<typename SCLR>
-void axpy(SCLR alpha, Frame<SCLR> x, Frame<SCLR> y); 
+void axpy(SCLR alpha, Frame<SCLR> x, Frame<SCLR> y);
 
  // x'y
 template<typename SCLR>
@@ -281,7 +294,7 @@ SCLR dot(Frame<SCLR> x, Frame<SCLR> y);
 
 // c = alpha op(a) * op(b) + beta c.
 template<typename SCLR>
-void gemm(Frame<SCLR> c, Frame<SCLR> a, Frame<SCLR> b, char ta='N', char tb='N', SCLR alpha=1.0, SCLR beta=0.0); 
+void gemm(Frame<SCLR> c, Frame<SCLR> a, Frame<SCLR> b, char ta='N', char tb='N', SCLR alpha=1.0, SCLR beta=0.0);
 
 // b = alpha op(a) * b  OR  b = alpha b * op(a) where a is triangular.
 template<typename SCLR>
@@ -315,7 +328,7 @@ template<typename SCLR>
 int chol(Frame<SCLR> a, char uplo='L');
 
 //--------------------------------------------------------------------
-  
+
 // BLAS Level 1
 // BLAS Level 3
 // LAPACK
@@ -363,7 +376,7 @@ extern "C" {
   void dpotrf_(char* UPLO, int* N, double* A, int* LDA, int* INFO);
 
   // float
- 
+
   void saxpy_(int* N, float* DA, float* DX, int* INCX, float* DY, int* INCY);
   float sdot_(int* N, float* DX, int* INCX, float* DY, int* INCY);
 
@@ -391,7 +404,15 @@ extern "C" {
 template<typename SCLR>
 void Frame<SCLR>::copy(const Frame<SCLR>& M)
 {
-  if (this==&M) return;
+  if (sameframe(M)) return;
+  // if (p==&M(0)) return;
+  if (overlap(*this, M)) {
+    #ifdef NTHROW
+    throw std::runtime_error("Frame<SCLR>::copy memory overlap.\n");
+    #else
+    Rprintf( "Warning::Frame<SCLR>::copy memory overlaps.\n");
+    #endif
+  }
   idxcheck(nr==M.rows() && nc==M.cols() && nm==M.mats());
   for(uint i = 0; i < vol(); i++) p[i] = M.vec(i);
 } // copy
@@ -417,6 +438,12 @@ Frame<SCLR> Frame<SCLR>::col(uint c, uint num)
 }
 
 template<typename SCLR>
+Frame<SCLR> Frame<SCLR>::column(uint c, uint num)
+{
+  col(c, num);
+}
+
+template<typename SCLR>
 Frame<SCLR> Frame<SCLR>::fill(const SCLR& d)
 {
   for(uint i = 0; i < vol(); i++) p[i] = d;
@@ -428,6 +455,17 @@ Frame<SCLR> Frame<SCLR>::dim(uint r, uint c, uint m)
 {
   sizecheck (r*c*m==nr*nc*nm);
   return Frame<SCLR>(p, r, c, m);
+}
+
+template<typename SCLR>
+void Frame<SCLR>::reshape(uint r, uint c, uint m)
+{
+  if (sizecheck (r*c*m==nr*nc*nm) ) {
+    nr = r;
+    nc = c;
+    nm = m;
+  }
+  // return 1/0 on success/failure.
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -547,18 +585,27 @@ Frame<SCLR> between(Frame<SCLR> c, const Frame<SCLR> a, const Frame<SCLR> lower,
 template<typename SCLR>
 ostream& operator<<(ostream& os, Frame<SCLR> M)
 {
-  M.write(os, false, false);
-  return os;
+  return M.out(os, true);
 }
 
-// Read in data from a string using scan.
-
 template<typename SCLR>
-Frame<SCLR>& operator<<(Frame<SCLR>& M, const string& s)
-{
-  stringstream ss(s);
-  M.scan(ss, false, false);
-  return M;
+ostream& Frame<SCLR>::out(ostream & os, bool natural){
+  if (natural) {
+    for (uint k=0; k<nm; k++) {
+      for (uint i=0; i<nr; i++) {
+	for (uint j=0; j<nc; j++) {
+	  os << operator()(i,j,0);
+	  if (j != (nc-1)) os << " ";
+	}
+	if (i != (nr-1)) os << "\n";
+      }
+      if (k != (nm-1)) os << "\n";
+    }
+  }
+  else {
+    dump(os, false, false);
+  }
+  return os;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -569,7 +616,7 @@ Frame<SCLR>& operator<<(Frame<SCLR>& M, const string& s)
 // dimensions of the array of matrices.
 
 template<typename SCLR>
-bool Frame<SCLR>::write(std::ostream& os, bool header, bool binary)
+bool Frame<SCLR>::dump(std::ostream& os, bool header, bool binary)
 {
   if (!os) return false;
   // Write binary.
@@ -591,7 +638,7 @@ bool Frame<SCLR>::write(std::ostream& os, bool header, bool binary)
 	for(uint i = 0; i < nr; i++){
 	  os << operator()(i,j,k) << " ";
 	}
-	os << "\n";
+	if ((j+1) != nc) os << "\n";
       }
       if ((k+1) != nm) os << "\n";
     }
@@ -603,12 +650,18 @@ bool Frame<SCLR>::write(std::ostream& os, bool header, bool binary)
 #ifndef DISABLE_FIO
 
 template<typename SCLR>
-bool Frame<SCLR>::write(const string& file, bool header, bool binary)
+bool Frame<SCLR>::dump(const string& file, bool header, bool binary)
 {
   std::ofstream ofs(file.c_str());
   if (!ofs) return false;
-  return write(ofs, header, binary);
+  return dump(ofs, header, binary);
 } // write
+
+template<typename SCLR>
+bool Frame<SCLR>::save(const string& file, bool header, bool binary)
+{
+  return dump(file, header, binary);
+}
 
 #endif
 
@@ -671,6 +724,14 @@ uint Frame<SCLR>::scan(const string& file, bool header, bool binary)
 } // read
 
 #endif
+
+// Read in data from a string using scan.
+template<typename SCLR>
+void Frame<SCLR>::scanString(const string& s)
+{
+  stringstream ss(s);
+  scan(ss, false, false);
+}
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -955,7 +1016,7 @@ void syrk(Frame<SCLR> c, Frame<SCLR> a, char ta, SCLR alpha, SCLR beta)
   char tb = ta=='N' ? 'T' : 'N';
   pconform(c, a, a, ta, tb);
   int k = ta=='N' ? a.cols() : a.rows();
-  
+
   rsyrk('U', ta, c.rows(), k, alpha, &a(0), a.rows(), beta, &c(0), c.rows());
 
   // Better way?

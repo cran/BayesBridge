@@ -231,10 +231,93 @@ double RNG::rtgamma_rate(double shape, double rate, double right_t)
 }
 
 //------------------------------------------------------------------------------
+double RNG::ltgamma(double shape, double rate, double trunc)
+{
+  double a = shape;
+  double b = rate * trunc;
+
+  if (trunc <=0) {
+    Rprintf( "ltgamma: trunc = %g < 0\n", trunc);
+    return 0;
+  }
+  if (shape < 1) {
+    Rprintf( "ltgamma: shape = %g < 1\n", shape);
+    return 0;
+  }
+
+  if (shape ==1) return expon_rate(1) / rate + trunc;
+
+  double d1 = b-a;
+  double d3 = a-1;
+  double c0 = 0.5 * (d1 + sqrt(d1*d1 + 4 * b)) / b;
+   
+  double x = 0.0;
+  bool accept = false;
+
+  while (!accept) {
+    x = b + expon_rate(1) / c0;
+    double u = unif();
+    
+    double l_rho = d3 * log(x) - x * (1-c0);
+    double l_M   = d3 * log(d3 / (1-c0)) - d3;
+
+    accept = log(u) <= (l_rho - l_M);
+  }
+
+  return trunc * (x/b);
+}
+
+//------------------------------------------------------------------------------
+double RNG::igauss(double mu, double lambda)
+{
+  // See R code for specifics.
+  double mu2 = mu * mu;
+  double Y = norm(0.0, 1.0);
+  Y *= Y;
+  double W = mu + 0.5 * mu2 * Y / lambda;
+  double X = W - sqrt(W*W - mu2);
+  if (unif() > mu / (mu + X)) 
+    X = mu2 / X;
+  return X;
+}
+
+//------------------------------------------------------------------------------
+double RNG::rtinvchi2(double scale, double trunc)
+{
+  double R = trunc / scale;
+  // double X = 0.0;
+  // // I need to consider using a different truncated normal sampler.
+  // double E1 = r.expon_rate(1.0); double E2 = r.expon_rate(1.0);
+  // while ( (E1*E1) > (2 * E2 / R)) {
+  //   // Rprintf("E %g %g %g %g\n", E1, E2, E1*E1, 2*E2/R);
+  //   E1 = r.expon_rate(1.0); E2 = r.expon_rate(1.0);
+  // }
+  // // Rprintf("E %g %g \n", E1, E2);
+  // X = 1 + E1 * R;
+  // X = R / (X * X);
+  // X = scale * X;
+  double E = tnorm(1/sqrt(R));
+  double X = scale / (E*E);
+  return X;
+}
+
+//------------------------------------------------------------------------------
 
 double RNG::Beta(double a, double b, bool log)
 {
   double out = Gamma(a, true) + Gamma(b, true) - Gamma(a+b,true);
   if (!log) out = exp(out);
   return out;
+}
+
+//------------------------------------------------------------------------------
+
+double RNG::p_igauss(double x, double mu, double lambda)
+{
+  // z = 1 / mean
+  double z = 1 / mu;
+  double b = sqrt(lambda / x) * (x * z - 1);
+  double a = sqrt(lambda / x) * (x * z + 1) * -1.0;
+  double y = RNG::p_norm(b) + exp(2 * lambda * z) * RNG::p_norm(a);
+  return y;
 }
