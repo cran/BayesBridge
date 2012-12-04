@@ -1,0 +1,83 @@
+Created: Dec. 2011
+Updated: 2011-12-29
+
+Notes on creating an R package:
+
+* Sources
+
+  ** A good reference is the R documentation "Writing R Extensions"
+     <http://cran.r-project.org/doc/manuals/R-exts.html>.
+
+* Useful commands
+
+  ** To check the package do "R CMD check <dirname>" where <dirname>
+     is the directory of the package.  You invoke this from the
+     directory that contain the directory <dirname>.
+
+  ** To build the package do "R CMD build <dirname>" where <dirname>
+     is the directory of the package.  You invoke this from the
+     directory that contains the directory <dirname>
+
+  ** To test the build you can install the library in a temporary
+     directory using "R CMD INSTALL -l <temp> <package>".  You can
+     then try the package in R using "library(package, lib.loc=temp)".
+
+  ** To build a BINARY you use "R CMD INSTALL --build <package>".  On
+     Mac, this produces a .tgz.  You can then install the package
+     using "R CMD INSTALL -l Test/ <package>".
+
+  ** To just check the documentation file <filename.Rd> do "R CMD
+     Rdconv -t txt <filename.Rd>"
+
+  ** To compile using R invoke "R CMD shlib <filename>"
+
+  ** It is helpful to do a dry-run prior to actually compiling.  To do
+     a dry-run use "R CMD shlib -n <filename>".  This will tell you
+     what R is going to do.
+
+     *** I was having a problem in that R CMD shlib was trying to use
+         the gcc compiler though my code is written in cpp.  It turns
+         out that the _extension and the extension of every file in
+         the directory_ is used to determine which compiler to use.
+         Thus if there is a .c file then R will try to use gcc.
+
+* Misc
+
+  ** When using the ".C" command in R, the PACKAGE variable is the
+     name of the shared object (without the extension, .so, .sl, .dll,
+     etc) where the function can be found.  It does not refer to the
+     name of the R package.
+
+  ** You may need to add R's latex directory to your TEXINPUTS
+     environment variable for the manual to compile correctly.  On my
+     Mac that directory is
+     </Library/Frameworks/R.framework/Resources/share/texmf/tex>.
+
+  ** You must have the "helvetic" and "courier" packages installed for
+     the manual to compile correctly.  If they are not installed use
+     tlmgr to install them.
+
+  ** It is important that the name of the package is consistent
+     throughout.  I encountered several errors when I switch from the
+     name rregression to BayesBrdige.
+
+  ** It is worth looking at the documentation for
+     library.dynam(lib.name, package.name, verbose=TRUE) to contrast
+     it with .C(function.call, etc, PACKAGE).  In the latter case
+     PACKAGE refers to the shared object/lib.
+
+  ** When compiling for R you want to use the BLAS and LAPACK
+     libraries supplied by R.  You can do this by including the macros
+     $(BLAS_LIBS) and $(LAPACK_LIBS) in PKG_LIBS.  You might also need
+     to include $(FLIBS) for Fortran libraries.
+
+  ** To see what packages are loaded use search().  To unload a
+     package use detach(package:<packagename>) where <packagename> is
+     the name of the package.
+
+  ** Use <http://win-builder.r-project.org/> to build on windows.  You need to
+     build the package with R CMD build <packagename> and then upload the
+     .tar.gz file to win-builder.
+
+* To-do
+

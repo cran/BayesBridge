@@ -1,0 +1,12 @@
+# PKG_CPPFLAGS = -I$(HOME)/RV-Project/Code/C_Examples/MyLib/ -I$(HOME)/Code/include/ -DUSE_R
+# PKG_CPPFLAGS = -I$(PWD) -D"USE_R"
+# I should check if they have GSL installed and use it if
+# they do because things seem to run faster.
+# Though maybe that's only true if you don't compile with R CMD shlib.
+# PKG_LIBS = -L$(HOME)/Code/lib -lblas -llapack -lgsl
+# PKG_LIBS = -lblas -l
+# PKG_CPPFLAGS = -I$(HOME)/Code/include/ -DUSE_R
+# PKG_CPPFLAGS = -DUSE_R -DDISABLE_FIO -I../inst/include/ -DDISABLE_SINGLE -DNTHROW
+PKG_CPPFLAGS = -DUSE_R -DDISABLE_FIO -DDISABLE_SINGLE -DNTHROW
+# PKG_CPPFLAGS = -DUSE_R -DDISABLE_FIO -DDISABLE_SINGLE -Wall -pedantic -Wshadow -DNTHROW -std=c++98
+PKG_LIBS = $(BLAS_LIBS) $(FLIBS) $(LAPACK_LIBS) 
