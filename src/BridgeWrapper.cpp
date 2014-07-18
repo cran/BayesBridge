@@ -909,7 +909,7 @@ void rtnorm(double *x, double *left, double* right, double *mu, double *sig, int
     if (left[i] != R_NegInf && right[i] != R_PosInf) {
       x[i] = r.tnorm(left[i], right[i], mu[i], sig[i]);
     } else if (left[i] != R_NegInf && right[i] == R_PosInf) {
-      x[i] = x[i] = r.tnorm(left[i], mu[i], sig[i]);
+      x[i] = r.tnorm(left[i], mu[i], sig[i]);
     } else if (left[i] == R_NegInf && right[i] != R_PosInf) {
       x[i] = -1.0 * r.tnorm(-1.0 * right[i], -1.0 * mu[i], sig[i]);
     } else if (left[i] == R_NegInf && right[i] == R_PosInf) {

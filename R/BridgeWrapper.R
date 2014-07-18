@@ -50,15 +50,14 @@ is.above <- function(param, val, name){
 check.parameters <- function(N, R, M, sig2.shape, sig2.scale, nu.shape, nu.rate, alpha.a, alpha.b){
     ok = TRUE;
     if (N!=R)    { print("Error: y and X do not conform."); ok=FALSE; }
-    ok = ok *
-        is.above(M         , 1, "niter") *
-            is.above(sig2.shape, 0, "sig2.shape") *
-                is.above(sig2.scale, 0, "sig2.scale") *
-                    is.above(nu.shape  , 0, "nu.shape") *
-                        is.above(nu.rate   , 0, "nu.rate") *
-                            is.above(alpha.a   , -1, "alpha.a") *
-                                is.above(alpha.b   , -1, "alpha.b");
-
+    ok <- ok *
+          is.above(M         , 1, "niter") *
+          is.above(sig2.shape, 0, "sig2.shape") *
+          is.above(sig2.scale, 0, "sig2.scale") *
+          is.above(nu.shape  , 0, "nu.shape") *
+          is.above(nu.rate   , 0, "nu.rate") *
+          is.above(alpha.a   , -1, "alpha.a") *
+          is.above(alpha.b   , -1, "alpha.b");
 
     ## if (M > 1000){
     ##     ans = readline(paste("niter =", M, "> 1000.  Do you really want to proceed? [n] "));
@@ -74,9 +73,9 @@ check.EM <- function(lambda.max, tol, max.iter)
 {
     ok = TRUE;
     ok = ok *
-        is.above(lambda.max, 0.0, "lambda.max") *
-            is.above(tol       , 0.0, "tolerance") *
-                is.above(max.iter  , 1.0, "max.iter");
+         is.above(lambda.max, 0.0, "lambda.max") *
+         is.above(tol       , 0.0, "tolerance") *
+         is.above(max.iter  , 1.0, "max.iter");
 
     ok
 }

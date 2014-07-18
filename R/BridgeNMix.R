@@ -22,7 +22,7 @@
 
 ## Bridge regression using mixture of normals representation.
 
-################source("BridgeTMix.R") ## For draw.tau, draw.sig, etc.
+#################source("BridgeTMix.R") ## For draw.tau, draw.sig, etc.
 
 bridge.nmix.R <- function(y, X, nsamp, alpha=0.5, sig2.shape=0.0, sig2.scale=0.0, nu.shape=2.0, nu.rate=2.0,
                           burn=100, sig2=0.0, tau=0.0, verbose=500,

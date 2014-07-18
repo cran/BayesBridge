@@ -562,7 +562,7 @@ Block<SCLR> cast(SCLR d)
 template<typename SCLR>
 Block<SCLR> seq(SCLR start, SCLR end, SCLR delta=1)
 {
-  double sign = end - start < 0 ? -1.0 : 1.0;
+    double sign = ((end - start) < 0.0) ? -1.0 : 1.0;
   double new_delta = sign * fabs((double)delta);
   double N_double = (end-start) / new_delta;
   if (N_double < 0) Rprintf( "Problem in seq: N_double < 0");
