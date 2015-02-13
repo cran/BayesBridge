@@ -468,8 +468,7 @@ rtruncated.norm <- function(num=1, left=-Inf, right=Inf, mu=0.0, sig=1.0)
 
     x = rep(0.0, num); ## Force double
 
-    
-    OUT = .C("rtnorm", x, left, right, mu, sig, as.integer(num), PACKAGE="BayesBridge", NAOK=TRUE)[[1]];
+    OUT = .C("rtnorm", x, left, right, mu, sig, as.integer(num), PACKAGE="BayesBridge", NAOK=TRUE);
 
     OUT[[1]]
 }
